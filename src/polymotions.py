@@ -10,13 +10,17 @@ def getSentiments(text):
     lang = parsedText.language.code
     name = parsedText.language.name
     if(parsedText.language.confidence>95):
-        try:
-            tasksSupported = downloader.supported_tasks(lang=lang)
-        except:
-            print("Language (" + name + ") not supported!")
-            sys.exit(1)
+        if allOp != None or languageOp != None:
+            print("Language detected: " + name)
+
+        if allOp != None or textOp != None or fullOp != None or entityOp != None or findOp != None:
+            try:
+                tasksSupported = downloader.supported_tasks(lang=lang)
+            except:
+                print("Language (" + name + ") not supported!")
+                sys.exit(1)
         
-        if allOp != None or textOp != None or languageOp != None or fullOp != None:
+        if allOp != None or textOp != None or fullOp != None:
             if "sentiment2" in tasksSupported:
 
                 #download necessary files, quiet=True for not outputing download info to stdout
@@ -29,9 +33,6 @@ def getSentiments(text):
                         numberWords += 1
                         sumSentiment += word.polarity
                 
-                if allOp != None or languageOp != None:
-                    print("Language detected: " + name)
-
                 if allOp != None or textOp != None:
                     print("\nSentiment of text:")
                     print("\tsum: " + str(sumSentiment))
@@ -41,7 +42,7 @@ def getSentiments(text):
                 print("Language (" + name + ") not supported!")
                 sys.exit(1)
 
-        if allOp != None or entityOp != None or fullOp != None:
+        if allOp != None or entityOp != None or fullOp != None or findOp != None:
             if "ner2" in tasksSupported and "embeddings2" in tasksSupported:
 
                 #download necessary files, quiet=True for not outputing download info to stdout
@@ -50,6 +51,12 @@ def getSentiments(text):
 
                 if entityOp != None or allOp != None:
                     print("\nSentiment associated to each entity by order of appearance in text:")
+                
+                if findOp != None:
+                    findsSent = 0
+                    findsOcur = 0
+                    print("\nOcurences and sentiment of \"" + findOp + "\" entity:")
+
                 for entity in parsedText.entities:
                     entitySent = entity.positive_sentiment-entity.negative_sentiment
                     if fullOp != None or allOp != None:
@@ -57,6 +64,17 @@ def getSentiments(text):
 
                     if entityOp != None or allOp != None:
                         print("\t" + str(" ".join(entity)) + ": " + str(entitySent))
+                    if findOp != None:
+                        jEntity = " ".join(entity)
+                        findsSent += entitySent
+                        findsOcur += 1
+                        if findOp in jEntity:
+                            print("\t" + jEntity + ": " + str(entitySent))
+
+                if findOp != None:
+                    print("\nTotal of \"" + findOp + "\" entity:")
+                    print("\tsum: " + str(findsSent))
+                    print("\tmean: " + str(findsSent/findsOcur))
             
                 if fullOp != None or allOp != None:
                     print("\nFinal Sentiment of text (with entity sentiment):")
@@ -73,15 +91,21 @@ def getSentiments(text):
 def printHelp():
     print("Usage: ./Polymotions.py [OPTIONS] [FILENAME]")
     print("  or:  ./Polymotions.py [OPTIONS]")
-    print("Default behaviour: ")
+    print("Default behaviour: Obtains the sentiment of text with the entities sentiment")
     print("\nOptions:")
+    print("  -l\tDetect language of text")
+    print("  -t\tObtains sentiment of text")
+    print("  -e\tObtains sentiment of entities of text")
+    print("  -f\tGet the sentiment for the entity passed by argument")
+    print("  -a\tAll above")
     print("  -h\tHelp")
     print("\nExample: ./Polymotions.py text.txt")
+    print("\nExample: ./polymotions.py -f Paris text.txt")
 
 #main
 
 try:
-    options, remainder = getopt.getopt(sys.argv[1:], 'atefhl')
+    options, remainder = getopt.getopt(sys.argv[1:], 'atehlf:')
     dict_opts = dict(options)
 except:
     printHelp()
@@ -91,8 +115,14 @@ helpOp = dict_opts.get('-h',None)
 allOp = dict_opts.get('-a',None)
 languageOp = dict_opts.get('-l',None)
 textOp = dict_opts.get('-t',None)
-fullOp = dict_opts.get('-f',None)
+findOp = dict_opts.get('-f',None)
 entityOp = dict_opts.get('-e',None)
+
+# Default behaviour
+if not dict_opts:
+    fullOp = ' '
+else:
+    fullOp = None
 
 if helpOp!=None:
     printHelp()
