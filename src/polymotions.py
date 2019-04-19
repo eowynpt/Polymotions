@@ -15,41 +15,60 @@ def getSentiments(text):
         except:
             print("Language (" + name + ") not supported!")
             sys.exit(1)
+        
+        if allOp != None or textOp != None or languageOp != None or fullOp != None:
+            if "sentiment2" in tasksSupported:
 
-        if "sentiment2" in tasksSupported:
+                #download necessary files, quiet=True for not outputing download info to stdout
+                downloader.download("sentiment2." + lang, quiet=True)
+                
+                if allOp != None or textOp != None or fullOp != None:
+                    sumSentiment = 0
+                    numberWords = 0
+                    for word in parsedText.words:
+                        numberWords += 1
+                        sumSentiment += word.polarity
+                
+                if allOp != None or languageOp != None:
+                    print("Language detected: " + name)
 
-            #download necessary files, quiet=True for not outputing download info to stdout
-            downloader.download("sentiment2." + lang, quiet=True)
-    
-            sumSentiment = 0
-            for word in parsedText.words:
-                sumSentiment += word.polarity
+                if allOp != None or textOp != None:
+                    print("\nSentiment of text:")
+                    print("\tsum: " + str(sumSentiment))
+                    print("\tmean: " + str(sumSentiment/numberWords))
 
-            print("Language detected: " + name)
-            print("Sentiment of text: " + str(sumSentiment))
+            else:
+                print("Language (" + name + ") not supported!")
+                sys.exit(1)
 
-        else:
-            print("Language (" + name + ") not supported!")
+        if allOp != None or entityOp != None or fullOp != None:
+            if "ner2" in tasksSupported and "embeddings2" in tasksSupported:
 
-        if "ner2" in tasksSupported:
+                #download necessary files, quiet=True for not outputing download info to stdout
+                downloader.download("ner2." + lang, quiet=True)
+                downloader.download("embeddings2." + lang, quiet=True)
 
-            #download necessary files, quiet=True for not outputing download info to stdout
-            downloader.download("ner2." + lang, quiet=True)
-            downloader.download("embeddings2." + lang, quiet=True)
+                if entityOp != None or allOp != None:
+                    print("\nSentiment associated to each entity by order of appearance in text:")
+                for entity in parsedText.entities:
+                    entitySent = entity.positive_sentiment-entity.negative_sentiment
+                    if fullOp != None or allOp != None:
+                        sumSentiment += entitySent
 
-            print("\nEntities:")
-            for sent in parsedText.sentences:
-                print("\n",sent)
-                for entity in sent.entities:
-                    print(entity.tag, entity)
+                    if entityOp != None or allOp != None:
+                        print("\t" + str(" ".join(entity)) + ": " + str(entitySent))
+            
+                if fullOp != None or allOp != None:
+                    print("\nFinal Sentiment of text (with entity sentiment):")
+                    print("\tsum: " + str(sumSentiment))
+                    print("\tmean: " + str(sumSentiment/numberWords))
 
-            print("\nSentimento associado a cada entidade:")
-            for entity in parsedText.entities:
-                print(str(entity)+" +"+str(entity.positive_sentiment)+" -"+str(entity.negative_sentiment))
-        else:
-            print("Language (" + name + ") not supported!")
+            else:
+                print("Language (" + name + ") not supported!")
+                sys.exit(1)
     else:
         print("Can't detect language reliably or don't support language!")
+        sys.exit(1)
 
 def printHelp():
     print("Usage: ./Polymotions.py [OPTIONS] [FILENAME]")
@@ -62,15 +81,20 @@ def printHelp():
 #main
 
 try:
-    options, remainder = getopt.getopt(sys.argv[1:], 'h')
+    options, remainder = getopt.getopt(sys.argv[1:], 'atefhl')
     dict_opts = dict(options)
 except:
     printHelp()
     sys.exit(1)
 
-help = dict_opts.get('-h',None)
+helpOp = dict_opts.get('-h',None)
+allOp = dict_opts.get('-a',None)
+languageOp = dict_opts.get('-l',None)
+textOp = dict_opts.get('-t',None)
+fullOp = dict_opts.get('-f',None)
+entityOp = dict_opts.get('-e',None)
 
-if help!=None:
+if helpOp!=None:
     printHelp()
     sys.exit(1)
 else:
