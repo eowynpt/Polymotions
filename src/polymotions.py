@@ -4,11 +4,69 @@ import re, sys, getopt, polyglot
 from polyglot.text import Text
 from polyglot.downloader import downloader
 
+def textSentiment(parsedText,lang):
+    #download necessary files, quiet=True for not outputing download info to stdout
+    downloader.download("sentiment2." + lang, quiet=True)
+    
+    if allOp != None or textOp != None or fullOp != None:
+        sumSentiment = 0
+        numberWords = 0
+        for word in parsedText.words:
+            numberWords += 1
+            sumSentiment += word.polarity
+    
+    if allOp != None or textOp != None:
+        print("\nSentiment of text:")
+        print("\tsum: " + str(sumSentiment))
+        print("\tmean: " + str(sumSentiment/numberWords))
+
+    return (sumSentiment,numberWords)
+
+def entitiesAndFinalSentiment(parsedText,lang,sumSentiment,numberWords):
+    #download necessary files, quiet=True for not outputing download info to stdout
+    downloader.download("ner2." + lang, quiet=True)
+    downloader.download("embeddings2." + lang, quiet=True)
+
+    if entityOp != None or allOp != None:
+        print("\nSentiment associated to each entity by order of appearance in text:")
+    
+    if findOp != None:
+        findsSent = 0
+        findsOcur = 0
+        findsOut = ""
+
+    for entity in parsedText.entities:
+        entitySent = entity.positive_sentiment-entity.negative_sentiment
+        if fullOp != None or allOp != None:
+            sumSentiment += entitySent
+
+        if entityOp != None or allOp != None:
+            print("\t" + str(" ".join(entity)) + ": " + str(entitySent))
+        if findOp != None:
+            jEntity = " ".join(entity)
+            findsSent += entitySent
+            findsOcur += 1
+            if findOp in jEntity:
+                findsOut += "\t" + jEntity + ": " + str(entitySent) + "\n"
+
+    if findOp != None:
+        print("\nOcurences and sentiment of \"" + findOp + "\" entity:")
+        print(findsOut)
+        print("\nTotal of \"" + findOp + "\" entity:")
+        print("\tsum: " + str(findsSent))
+        print("\tmean: " + str(findsSent/findsOcur))
+
+    if fullOp != None or allOp != None:
+        print("\nFinal Sentiment of text (with entity sentiment):")
+        print("\tsum: " + str(sumSentiment))
+        print("\tmean: " + str(sumSentiment/numberWords))
+
 def getSentiments(text):
     parsedText = Text(text)
 
     lang = parsedText.language.code
     name = parsedText.language.name
+
     if(parsedText.language.confidence>95):
         if allOp != None or languageOp != None:
             print("Language detected: " + name)
@@ -22,65 +80,14 @@ def getSentiments(text):
         
         if allOp != None or textOp != None or fullOp != None:
             if "sentiment2" in tasksSupported:
-
-                #download necessary files, quiet=True for not outputing download info to stdout
-                downloader.download("sentiment2." + lang, quiet=True)
-                
-                if allOp != None or textOp != None or fullOp != None:
-                    sumSentiment = 0
-                    numberWords = 0
-                    for word in parsedText.words:
-                        numberWords += 1
-                        sumSentiment += word.polarity
-                
-                if allOp != None or textOp != None:
-                    print("\nSentiment of text:")
-                    print("\tsum: " + str(sumSentiment))
-                    print("\tmean: " + str(sumSentiment/numberWords))
-
+                (sumSentiment, numberWords) = textSentiment(parsedText,lang)
             else:
                 print("Language (" + name + ") not supported!")
                 sys.exit(1)
 
         if allOp != None or entityOp != None or fullOp != None or findOp != None:
             if "ner2" in tasksSupported and "embeddings2" in tasksSupported:
-
-                #download necessary files, quiet=True for not outputing download info to stdout
-                downloader.download("ner2." + lang, quiet=True)
-                downloader.download("embeddings2." + lang, quiet=True)
-
-                if entityOp != None or allOp != None:
-                    print("\nSentiment associated to each entity by order of appearance in text:")
-                
-                if findOp != None:
-                    findsSent = 0
-                    findsOcur = 0
-                    print("\nOcurences and sentiment of \"" + findOp + "\" entity:")
-
-                for entity in parsedText.entities:
-                    entitySent = entity.positive_sentiment-entity.negative_sentiment
-                    if fullOp != None or allOp != None:
-                        sumSentiment += entitySent
-
-                    if entityOp != None or allOp != None:
-                        print("\t" + str(" ".join(entity)) + ": " + str(entitySent))
-                    if findOp != None:
-                        jEntity = " ".join(entity)
-                        findsSent += entitySent
-                        findsOcur += 1
-                        if findOp in jEntity:
-                            print("\t" + jEntity + ": " + str(entitySent))
-
-                if findOp != None:
-                    print("\nTotal of \"" + findOp + "\" entity:")
-                    print("\tsum: " + str(findsSent))
-                    print("\tmean: " + str(findsSent/findsOcur))
-            
-                if fullOp != None or allOp != None:
-                    print("\nFinal Sentiment of text (with entity sentiment):")
-                    print("\tsum: " + str(sumSentiment))
-                    print("\tmean: " + str(sumSentiment/numberWords))
-
+                entitiesAndFinalSentiment(parsedText,lang,sumSentiment,numberWords)
             else:
                 print("Language (" + name + ") not supported!")
                 sys.exit(1)
