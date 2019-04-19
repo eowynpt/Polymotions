@@ -51,7 +51,7 @@ def entitiesAndFinalSentiment(parsedText,lang,sumSentiment,numberWords):
 
     if findOp != None:
         print("\nOcurences and sentiment of \"" + findOp + "\" entity:")
-        print(findsOut)
+        print(findsOut, end='') #print without newline
         print("\nTotal of \"" + findOp + "\" entity:")
         print("\tsum: " + str(findsSent))
         print("\tmean: " + str(findsSent/findsOcur))
