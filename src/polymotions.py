@@ -13,7 +13,7 @@ def getSentiments(text):
         try:
             tasksSupported = downloader.supported_tasks(lang=lang)
         except:
-            print("Language (" + name + ") don't supported!")
+            print("Language (" + name + ") not supported!")
             sys.exit(1)
 
         if "sentiment2" in tasksSupported:
@@ -29,7 +29,25 @@ def getSentiments(text):
             print("Sentiment of text: " + str(sumSentiment))
 
         else:
-            print("Language (" + name + ") don't supported!")
+            print("Language (" + name + ") not supported!")
+
+        if "ner2" in tasksSupported:
+
+            #download necessary files, quiet=True for not outputing download info to stdout
+            downloader.download("ner2." + lang, quiet=True)
+            downloader.download("embeddings2." + lang, quiet=True)
+
+            print("\nEntities:")
+            for sent in parsedText.sentences:
+                print("\n",sent)
+                for entity in sent.entities:
+                    print(entity.tag, entity)
+
+            print("\nSentimento associado a cada entidade:")
+            for entity in parsedText.entities:
+                print(str(entity)+" +"+str(entity.positive_sentiment)+" -"+str(entity.negative_sentiment))
+        else:
+            print("Language (" + name + ") not supported!")
     else:
         print("Can't detect language reliably or don't support language!")
 
