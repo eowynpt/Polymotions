@@ -44,10 +44,10 @@ def entitiesAndFinalSentiment(parsedText,lang,sumSentiment,numberWords):
             print("\t" + str(" ".join(entity)) + ": " + str(entitySent))
         if findOp != None:
             jEntity = " ".join(entity)
-            findsSent += entitySent
-            findsOcur += 1
             if findOp in jEntity:
                 findsOut += "\t" + jEntity + ": " + str(entitySent) + "\n"
+                findsSent += entitySent
+                findsOcur += 1
 
     if findOp != None:
         print("\nOcurences and sentiment of \"" + findOp + "\" entity:")
@@ -87,6 +87,10 @@ def getSentiments(text):
 
         if allOp != None or entityOp != None or fullOp != None or findOp != None:
             if "ner2" in tasksSupported and "embeddings2" in tasksSupported:
+                if 'sumSentiment' not in locals():
+                        sumSentiment = 0
+                if 'numberWords' not in locals():
+                        numberWords = 0
                 entitiesAndFinalSentiment(parsedText,lang,sumSentiment,numberWords)
             else:
                 print("Language (" + name + ") not supported!")
@@ -104,7 +108,7 @@ def printHelp():
     print("  -t\tObtains sentiment of text")
     print("  -e\tObtains sentiment of entities of text")
     print("  -f\tGet the sentiment for the entity passed by argument")
-    print("  -a\tAll above")
+    print("  -a\tAll above except '-f'")
     print("  -h\tHelp")
     print("\nExample: ./Polymotions.py text.txt")
     print("\nExample: ./polymotions.py -f Paris text.txt")
