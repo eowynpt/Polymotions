@@ -5,9 +5,6 @@ from polyglot.text import Text
 from polyglot.downloader import downloader
 
 def textSentiment(parsedText,lang):
-    #download necessary files, quiet=True for not outputing download info to stdout
-    downloader.download("sentiment2." + lang, quiet=True)
-    
     if allOp != None or textOp != None or fullOp != None:
         sumSentiment = 0
         numberWords = 0
@@ -78,9 +75,12 @@ def getSentiments(text):
                 print("Language (" + name + ") not supported!")
                 sys.exit(1)
         
-        if allOp != None or textOp != None or fullOp != None:
+        if allOp != None or textOp != None or fullOp != None or entityOp != None or findOp != None:
             if "sentiment2" in tasksSupported:
-                (sumSentiment, numberWords) = textSentiment(parsedText,lang)
+                #download necessary files, quiet=True for not outputing download info to stdout
+                downloader.download("sentiment2." + lang, quiet=True)
+                if allOp != None or textOp != None or fullOp != None:
+                    (sumSentiment, numberWords) = textSentiment(parsedText,lang)
             else:
                 print("Language (" + name + ") not supported!")
                 sys.exit(1)
