@@ -28,7 +28,7 @@ def entitiesAndFinalSentiment(parsedText,lang,sumSentiment,numberWords):
     downloader.download("embeddings2." + lang, quiet=True)
 
     if entityOp != None or allOp != None:
-        print("\nSentiment associated to each entity by order of appearance in text:")
+        print("\nSentiment associated to each entity ocorrence by order of appearance in text:")
     
     if findOp != None:
         findsSent = 0
